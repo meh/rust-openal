@@ -15,6 +15,8 @@ pub use device::Device;
 pub mod context;
 pub use context::Context;
 
+pub mod listener;
+
 use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
