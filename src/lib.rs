@@ -9,6 +9,9 @@ pub use error::Error;
 pub mod util;
 pub use util::{Vector, Position, Direction, Velocity, Orientation};
 
+pub mod device;
+pub use device::Device;
+
 use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
