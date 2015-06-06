@@ -15,6 +15,9 @@ pub use device::Device;
 pub mod context;
 pub use context::Context;
 
+pub mod source;
+pub use source::Source;
+
 pub mod buffer;
 pub use buffer::Buffer;
 
