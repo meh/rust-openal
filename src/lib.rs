@@ -12,6 +12,9 @@ pub use util::{Vector, Position, Direction, Velocity, Orientation};
 pub mod device;
 pub use device::Device;
 
+pub mod context;
+pub use context::Context;
+
 use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
