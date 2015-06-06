@@ -3,6 +3,9 @@
 extern crate libc;
 extern crate openal_sys as ffi;
 
+pub mod error;
+pub use error::Error;
+
 use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
