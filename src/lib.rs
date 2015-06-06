@@ -6,6 +6,9 @@ extern crate openal_sys as ffi;
 pub mod error;
 pub use error::Error;
 
+pub mod util;
+pub use util::{Vector, Position, Direction, Velocity, Orientation};
+
 use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
