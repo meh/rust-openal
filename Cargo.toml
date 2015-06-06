@@ -1,0 +1,16 @@
+[package]
+name    = "openal"
+version = "0.1.0"
+
+authors = ["meh. <meh@schizofreni.co>"]
+license = "WTFPL"
+
+description = "OpenAL wrapper"
+repository  = "https://github.com/meh/rust-openal"
+keywords    = ["audio"]
+
+[dependencies]
+libc = "*"
+
+[dependencies.openal-sys]
+version = "1.16.0"
