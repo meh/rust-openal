@@ -15,6 +15,9 @@ pub use device::Device;
 pub mod context;
 pub use context::Context;
 
+pub mod buffer;
+pub use buffer::Buffer;
+
 pub mod listener;
 
 use std::ffi::CStr;
