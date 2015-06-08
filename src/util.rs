@@ -21,3 +21,9 @@ pub struct Velocity(pub Vector);
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[repr(C, packed)]
 pub struct Orientation(pub Vector, pub Vector);
+
+#[derive(PartialEq, Copy, Clone, Debug)]
+pub struct Doppler {
+	pub factor:   f32,
+	pub velocity: f32,
+}

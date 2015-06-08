@@ -1,10 +1,11 @@
 use std::ptr;
+use std::mem;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
 
 use ffi::*;
 use ::{Device, Error};
-use ::{Vector, Position, Velocity, Orientation};
+use ::{Vector, Position, Velocity, Orientation, Doppler};
 
 pub struct Context<'a> {
 	ptr: *mut ALCcontext,
@@ -128,6 +129,34 @@ impl<'a> Current<'a> {
 		}
 
 		self.0.take().unwrap()
+	}
+
+	pub fn doppler(&self) -> Doppler {
+		unsafe {
+			Doppler {
+				factor:   alGetFloat(AL_DOPPLER_FACTOR),
+				velocity: alGetFloat(AL_DOPPLER_VELOCITY),
+			}
+		}
+	}
+
+	pub fn set_doppler(&mut self, value: Doppler) {
+		unsafe {
+			alDopplerFactor(value.factor);
+			alDopplerVelocity(value.velocity);
+		}
+	}
+
+	pub fn speed_of_sound(&self) -> f32 {
+		unsafe {
+			alGetFloat(AL_SPEED_OF_SOUND)
+		}
+	}
+
+	pub fn set_speed_of_sound(&mut self, value: f32) {
+		unsafe {
+			alSpeedOfSound(value as ALfloat);
+		}
 	}
 
 	pub fn gain(&self) -> f32 {

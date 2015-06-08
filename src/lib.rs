@@ -4,7 +4,7 @@ extern crate libc;
 extern crate openal_sys as ffi;
 
 pub mod util;
-pub use util::{Vector, Position, Direction, Velocity, Orientation};
+pub use util::{Vector, Position, Direction, Velocity, Orientation, Doppler};
 
 pub mod error;
 pub use error::Error;
@@ -77,39 +77,5 @@ pub fn extensions() -> Option<&'static str> {
 		else {
 			Some(from_utf8_unchecked(CStr::from_ptr(ptr).to_bytes()))
 		}
-	}
-}
-
-#[derive(PartialEq, Copy, Clone, Debug)]
-pub struct Doppler {
-	factor:   f32,
-	velocity: f32,
-}
-
-pub fn doppler() -> Doppler {
-	unsafe {
-		Doppler {
-			factor:   alGetFloat(AL_DOPPLER_FACTOR),
-			velocity: alGetFloat(AL_DOPPLER_VELOCITY),
-		}
-	}
-}
-
-pub fn set_doppler(value: Doppler) {
-	unsafe {
-		alDopplerFactor(value.factor);
-		alDopplerVelocity(value.velocity);
-	}
-}
-
-pub fn speed_of_sound() -> f32 {
-	unsafe {
-		alGetFloat(AL_SPEED_OF_SOUND)
-	}
-}
-
-pub fn set_speed_of_sound(value: f32) {
-	unsafe {
-		alSpeedOfSound(value as ALfloat);
 	}
 }
