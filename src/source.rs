@@ -1,7 +1,8 @@
 use std::mem;
+use std::ops::Deref;
 
 use ffi::*;
-use ::{Error, Buffer, Vector, Position, Direction, Velocity};
+use ::{Error, Vector, Position, Direction, Velocity};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum State {
@@ -24,6 +25,20 @@ pub enum Offset {
 	Seconds(f32),
 	Samples(f32),
 	Bytes(f32),
+}
+
+impl Offset {
+	pub fn seconds() -> Self {
+		Offset::Seconds(0.0)
+	}
+
+	pub fn samples() -> Self {
+		Offset::Samples(0.0)
+	}
+
+	pub fn bytes() -> Self {
+		Offset::Bytes(0.0)
+	}
 }
 
 #[derive(PartialEq, Eq)]
@@ -302,9 +317,9 @@ impl Source {
 		}
 	}
 	
-	pub fn offset(&self, kind: Offset) -> Offset {
+	pub fn offset(&self, offset: Offset) -> Offset {
 		unsafe {
-			let e = match kind {
+			let kind = match offset {
 				Offset::Seconds(..) =>
 					AL_SEC_OFFSET,
 				
@@ -316,9 +331,9 @@ impl Source {
 			};
 
 			let mut value = 0.0;
-			alGetSourcef(self.id, e, &mut value);
+			alGetSourcef(self.id, kind, &mut value);
 
-			match kind {
+			match offset {
 				Offset::Seconds(..) =>
 					Offset::Seconds(value as f32),
 
@@ -364,8 +379,12 @@ impl Source {
 		}
 	}
 
-	pub fn push<'s, 'b: 's>(&'s mut self, buffer: &'b Buffer) -> Queued<'b> {
-		Queued::new(self, buffer)
+	pub fn queue(&mut self, buffer: ::Buffer) -> Buffer {
+		Buffer::new(self, buffer)
+	}
+
+	pub unsafe fn just_queue(&mut self, buffer: &::Buffer) -> UnsafeBuffer {
+		UnsafeBuffer::new(self, buffer)
 	}
 }
 
@@ -382,25 +401,55 @@ impl Drop for Source {
 }
 
 #[must_use]
-pub struct Queued<'a> {
+pub struct Buffer {
 	source: ALuint,
-	buffer: &'a Buffer,
+	buffer: ::Buffer,
 }
 
-impl<'a> Queued<'a> {
-	pub fn new<'s, 'b: 's>(source: &'s Source, buffer: &'b Buffer) -> Queued<'b> {
+impl Buffer {
+	pub fn new(source: &Source, buffer: ::Buffer) -> Buffer {
 		unsafe {
 			alSourceQueueBuffers(source.id(), 1, &buffer.id());
 
-			Queued { source: source.id(), buffer: buffer }
+			Buffer { source: source.id(), buffer: buffer }
 		}
 	}
 }
 
-impl<'a> Drop for Queued<'a> {
+impl Drop for Buffer {
 	fn drop(&mut self) {
 		unsafe {
 			alSourceUnqueueBuffers(self.source, 1, &self.buffer.id());
+		}
+	}
+}
+
+impl Deref for Buffer {
+	type Target = ::Buffer;
+
+	fn deref(&self) -> &<Self as Deref>::Target {
+		&self.buffer
+	}
+}
+
+#[must_use]
+pub struct UnsafeBuffer {
+	source: ALuint,
+	buffer: ALuint,
+}
+
+impl UnsafeBuffer {
+	pub unsafe fn new(source: &Source, buffer: &::Buffer) -> Self {
+		alSourceQueueBuffers(source.id(), 1, &buffer.id());
+
+		UnsafeBuffer { source: source.id(), buffer: buffer.id() }
+	}
+}
+
+impl Drop for UnsafeBuffer {
+	fn drop(&mut self) {
+		unsafe {
+			alSourceUnqueueBuffers(self.source, 1, &self.buffer);
 		}
 	}
 }
