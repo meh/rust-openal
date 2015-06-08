@@ -94,8 +94,10 @@ impl Drop for Buffer {
 		unsafe {
 			alDeleteBuffers(1, &self.id);
 
-			if let Some(error) = Error::last() {
-				panic!("{}", error)
+			if cfg!(debug_assertions) {
+				if let Some(error) = Error::last() {
+					panic!("{}", error)
+				}
 			}
 		}
 	}
