@@ -7,7 +7,7 @@ use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
 use ffi::*;
-use ::Error;
+use ::{Error, error};
 
 pub struct Device<'a> {
 	ptr: *mut ALCdevice,
@@ -64,9 +64,7 @@ impl<'a> Drop for Device<'a> {
 			if self._own {
 				if cfg!(debug_assertions) {
 					if alcCloseDevice(self.as_mut_ptr()) != ALC_TRUE {
-						if cfg!(debug_assertions) {
-							panic!("device still in use");
-						}
+						panic!("{}", Error::last_for(self).unwrap());
 					}
 				}
 				else {
@@ -74,6 +72,12 @@ impl<'a> Drop for Device<'a> {
 				}
 			}
 		}
+	}
+}
+
+unsafe impl<'a> error::Device for Device<'a> {
+	fn as_ptr(&self) -> *const ALCdevice {
+		self.ptr as *const _
 	}
 }
 
