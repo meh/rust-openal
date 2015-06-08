@@ -100,28 +100,28 @@ impl error::Error for Error {
 	fn description(&self) -> &str {
 		match self {
 			&Error::None =>
-				"no error",
+				"There is no current error.",
 
 			&Error::InvalidDevice =>
-				"invalid device",
+				"Invalid device.",
 
 			&Error::InvalidContext =>
-				"invalid context",
+				"Invalid context.",
 
 			&Error::InvalidEnum =>
-				"invalid enum",
+				"Invalid parameter.",
 
 			&Error::InvalidName =>
-				"invalid name",
+				"Invalid name parameter.",
 
 			&Error::InvalidValue =>
-				"invalid value",
+				"Invalid enum parameter value.",
 
 			&Error::InvalidOperation =>
-				"invalid operation",
+				"Illegal call.",
 
 			&Error::OutOfMemory =>
-				"out of memory",
+				"Unable to allocate memory.",
 		}
 	}
 }
