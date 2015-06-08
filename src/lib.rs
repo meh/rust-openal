@@ -21,6 +21,8 @@ pub use source::Source;
 pub mod buffer;
 pub use buffer::Buffer;
 
+pub mod extension;
+
 pub mod listener;
 
 use std::ffi::CStr;
