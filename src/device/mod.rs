@@ -55,8 +55,15 @@ impl<'a> Drop for Device<'a> {
 	fn drop(&mut self) {
 		unsafe {
 			if self._own {
-				if alcCloseDevice(self.as_mut_ptr()) != ALC_TRUE {
-					panic!("device still in use");
+				if cfg!(debug_assertions) {
+					if alcCloseDevice(self.as_mut_ptr()) != ALC_TRUE {
+						if cfg!(debug_assertions) {
+							panic!("device still in use");
+						}
+					}
+				}
+				else {
+					alcCloseDevice(self.as_mut_ptr());
 				}
 			}
 		}
