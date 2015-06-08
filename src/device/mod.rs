@@ -8,7 +8,7 @@ use std::str::from_utf8_unchecked;
 
 use libc::strlen;
 use ffi::*;
-use ::{Error, error};
+use ::Error;
 
 pub struct Device<'a> {
 	ptr: *mut ALCdevice,
@@ -47,12 +47,6 @@ impl<'a> Device<'a> {
 			else {
 				Ok(Device { _own: true, ..Device::wrap(ptr) })
 			}
-		}
-	}
-
-	pub fn error(&self) -> Error {
-		unsafe {
-			Error::from(error::ALC(alcGetError(self.as_ptr())))
 		}
 	}
 }

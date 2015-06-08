@@ -2,6 +2,7 @@ use std::error;
 use std::fmt;
 
 use ffi::*;
+use super::Device;
 
 #[derive(Copy, Clone)]
 pub enum Error {
@@ -29,6 +30,18 @@ impl Error {
 	pub fn last() -> Option<Self> {
 		unsafe {
 			match Error::from(AL(alGetError())) {
+				Error::None =>
+					None,
+
+				error =>
+					Some(error)
+			}
+		}
+	}
+
+	pub fn last_for(device: &Device) -> Option<Self> {
+		unsafe {
+			match Error::from(ALC(alcGetError(device.as_ptr()))) {
 				Error::None =>
 					None,
 
