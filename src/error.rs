@@ -2,7 +2,6 @@ use std::error;
 use std::fmt;
 
 use ffi::*;
-use super::Device;
 
 #[derive(Copy, Clone)]
 pub enum Error {
@@ -26,6 +25,16 @@ pub struct AL(pub ALenum);
 #[derive(Copy, Clone)]
 pub struct ALC(pub ALCenum);
 
+pub unsafe trait Device {
+	fn as_ptr(&self) -> *const ALCdevice;
+}
+
+unsafe impl Device for *const ALCdevice {
+	fn as_ptr(&self) -> *const ALCdevice {
+		*self
+	}
+}
+
 impl Error {
 	pub fn last() -> Option<Self> {
 		unsafe {
@@ -39,7 +48,7 @@ impl Error {
 		}
 	}
 
-	pub fn last_for(device: &Device) -> Option<Self> {
+	pub fn last_for<T: Device>(device: &T) -> Option<Self> {
 		unsafe {
 			match Error::from(ALC(alcGetError(device.as_ptr()))) {
 				Error::None =>
