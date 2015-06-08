@@ -6,7 +6,6 @@ use std::marker::PhantomData;
 use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
-use libc::strlen;
 use ffi::*;
 use ::Error;
 
@@ -79,6 +78,8 @@ impl<'a> Drop for Device<'a> {
 }
 
 pub fn names() -> Vec<&'static str> {
+	use libc::strlen;
+
 	let mut result = Vec::new();
 
 	unsafe {
