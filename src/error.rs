@@ -103,10 +103,10 @@ impl error::Error for Error {
 				"There is no current error.",
 
 			&Error::InvalidDevice =>
-				"Invalid device.",
+				"The device handle or specifier names an inaccessible driver/server.",
 
 			&Error::InvalidContext =>
-				"Invalid context.",
+				"The Context argument does not name a valid context.",
 
 			&Error::InvalidEnum =>
 				"Invalid parameter.",
