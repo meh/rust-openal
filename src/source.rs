@@ -405,7 +405,7 @@ impl Drop for Source {
 #[must_use]
 pub struct Buffer {
 	source: ALuint,
-	buffer: ::Buffer,
+	buffer: Option<::Buffer>,
 }
 
 impl Buffer {
@@ -413,7 +413,20 @@ impl Buffer {
 		unsafe {
 			alSourceQueueBuffers(source.id(), 1, &buffer.id());
 
-			Buffer { source: source.id(), buffer: buffer }
+			Buffer { source: source.id(), buffer: Some(buffer) }
+		}
+	}
+
+	pub fn take(mut self) -> Result<::Buffer, Error> {
+		unsafe {
+			alSourceUnqueueBuffers(self.source, 1, &self.buffer.as_ref().unwrap().id());
+
+			if let Some(error) = Error::last() {
+				Err(error)
+			}
+			else {
+				Ok(self.buffer.take().unwrap())
+			}
 		}
 	}
 }
@@ -421,7 +434,15 @@ impl Buffer {
 impl Drop for Buffer {
 	fn drop(&mut self) {
 		unsafe {
-			alSourceUnqueueBuffers(self.source, 1, &self.buffer.id());
+			if let Some(ref buffer) = self.buffer {
+				alSourceUnqueueBuffers(self.source, 1, &buffer.id());
+
+				if cfg!(debug_assertions) {
+					if let Some(error) = Error::last() {
+						panic!("{}", error);
+					}
+				}
+			}
 		}
 	}
 }
@@ -430,7 +451,7 @@ impl Deref for Buffer {
 	type Target = ::Buffer;
 
 	fn deref(&self) -> &<Self as Deref>::Target {
-		&self.buffer
+		self.buffer.as_ref().unwrap()
 	}
 }
 
@@ -452,6 +473,12 @@ impl Drop for UnsafeBuffer {
 	fn drop(&mut self) {
 		unsafe {
 			alSourceUnqueueBuffers(self.source, 1, &self.buffer);
+
+			if cfg!(debug_assertions) {
+				if let Some(error) = Error::last() {
+					panic!("{}", error);
+				}
+			}
 		}
 	}
 }
