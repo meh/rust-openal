@@ -32,14 +32,22 @@ impl<'a> Device<'a> {
 }
 
 impl<'a> Device<'a> {
-	pub fn open(name: Option<&str>) -> Result<Self, Error> {
+	pub fn default() -> Result<Self, Error> {
 		unsafe {
-			let ptr = if let Some(name) = name {
-				alcOpenDevice(CString::new(name.as_bytes()).unwrap().as_ptr())
+			let ptr = alcOpenDevice(ptr::null());
+
+			if ptr.is_null() {
+				Err(Error::InvalidName)
 			}
 			else {
-				alcOpenDevice(ptr::null())
-			};
+				Ok(Device { _own: true, ..Device::wrap(ptr) })
+			}
+		}
+	}
+
+	pub fn open(name: &str) -> Result<Self, Error> {
+		unsafe {
+			let ptr = alcOpenDevice(CString::new(name.as_bytes()).unwrap().as_ptr());
 
 			if ptr.is_null() {
 				Err(Error::InvalidName)
