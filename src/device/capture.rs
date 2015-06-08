@@ -116,6 +116,10 @@ unsafe impl<T: Reflect + 'static> traits::Device for Capture<T> {
 	}
 }
 
+pub fn default<T: Reflect + 'static>(channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
+	Capture::<T>::default(channels, rate, size)
+}
+
 pub fn names() -> Vec<&'static str> {
 	use std::ffi::CStr;
 	use std::str::from_utf8_unchecked;

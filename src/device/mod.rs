@@ -1,3 +1,6 @@
+pub mod capture;
+pub use self::capture::Capture;
+
 pub mod extension;
 
 use std::ffi::CString;
@@ -5,7 +8,7 @@ use std::ptr;
 use std::marker::PhantomData;
 
 use ffi::*;
-use ::{Error, traits};
+use ::{Error, Context, traits};
 
 pub struct Device<'a> {
 	ptr: *mut ALCdevice,
@@ -54,6 +57,14 @@ impl<'a> Device<'a> {
 			}
 		}
 	}
+
+	pub fn context(&self) -> Result<Context, Error> {
+		Context::new(self)
+	}
+}
+
+pub fn default<'a>() -> Result<Device<'a>, Error> {
+	Device::default()
 }
 
 impl<'a> Drop for Device<'a> {
