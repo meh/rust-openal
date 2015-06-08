@@ -6,6 +6,8 @@ extern crate openal_sys as ffi;
 pub mod util;
 pub use util::{Vector, Position, Direction, Velocity, Orientation, Doppler};
 
+pub mod traits;
+
 pub mod error;
 pub use error::Error;
 

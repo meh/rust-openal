@@ -3,7 +3,7 @@ use std::ptr;
 use std::ffi::CString;
 
 use ffi::*;
-use ::{Error, error};
+use ::{Error, traits};
 use ::util::format_for;
 
 pub struct Capture<T: Reflect + 'static> {
@@ -109,7 +109,7 @@ impl<T: Reflect + 'static> Drop for Capture<T> {
 	}
 }
 
-unsafe impl<T: Reflect + 'static> error::Device for Capture<T> {
+unsafe impl<T: Reflect + 'static> traits::Device for Capture<T> {
 	fn as_ptr(&self) -> *const ALCdevice {
 		self.ptr as *const _
 	}

@@ -7,7 +7,7 @@ use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
 use ffi::*;
-use ::{Error, error};
+use ::{Error, traits};
 
 pub struct Device<'a> {
 	ptr: *mut ALCdevice,
@@ -75,7 +75,7 @@ impl<'a> Drop for Device<'a> {
 	}
 }
 
-unsafe impl<'a> error::Device for Device<'a> {
+unsafe impl<'a> traits::Device for Device<'a> {
 	fn as_ptr(&self) -> *const ALCdevice {
 		self.ptr as *const _
 	}
