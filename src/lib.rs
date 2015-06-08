@@ -12,6 +12,9 @@ pub use error::Error;
 pub mod device;
 pub use device::Device;
 
+pub mod capture;
+pub use capture::Capture;
+
 pub mod context;
 pub use context::Context;
 
