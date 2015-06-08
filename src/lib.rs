@@ -3,11 +3,11 @@
 extern crate libc;
 extern crate openal_sys as ffi;
 
-pub mod error;
-pub use error::Error;
-
 pub mod util;
 pub use util::{Vector, Position, Direction, Velocity, Orientation};
+
+pub mod error;
+pub use error::Error;
 
 pub mod device;
 pub use device::Device;
