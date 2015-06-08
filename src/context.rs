@@ -2,6 +2,8 @@ use std::ptr;
 use std::mem;
 use std::marker::PhantomData;
 use std::ops::{Deref, DerefMut};
+use std::ffi::CStr;
+use std::str::from_utf8_unchecked;
 
 use ffi::*;
 use ::{Device, Error};
@@ -129,6 +131,36 @@ impl<'a> Current<'a> {
 		}
 
 		self.0.take().unwrap()
+	}
+
+
+	pub fn vendor(&self) -> &'static str {
+		unsafe {
+			from_utf8_unchecked(CStr::from_ptr(alGetString(AL_VENDOR)).to_bytes())
+		}
+	}
+
+	pub fn version(&self) -> (&'static str, &'static str, &'static str) {
+		unsafe {
+			let     string = from_utf8_unchecked(CStr::from_ptr(alGetString(AL_VERSION)).to_bytes());
+			let mut pieces = string.split(' ');
+
+			(pieces.next().unwrap(), pieces.next().unwrap(), pieces.next().unwrap())
+		}
+	}
+
+	pub fn renderer(&self) -> &'static str {
+		unsafe {
+			from_utf8_unchecked(CStr::from_ptr(alGetString(AL_RENDERER)).to_bytes())
+		}
+	}
+
+	pub fn extensions(&self) -> Vec<&'static str> {
+		unsafe {
+			from_utf8_unchecked(CStr::from_ptr(alGetString(AL_EXTENSIONS)).to_bytes())
+				.split(' ')
+				.collect()
+		}
 	}
 
 	pub fn doppler(&self) -> Doppler {
