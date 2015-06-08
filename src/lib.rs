@@ -23,8 +23,6 @@ pub use buffer::Buffer;
 
 pub mod extension;
 
-pub mod listener;
-
 use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 

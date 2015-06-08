@@ -4,6 +4,7 @@ use std::ops::{Deref, DerefMut};
 
 use ffi::*;
 use ::{Device, Error};
+use ::{Vector, Position, Velocity, Orientation};
 
 pub struct Context<'a> {
 	ptr: *mut ALCcontext,
@@ -127,6 +128,66 @@ impl<'a> Current<'a> {
 		}
 
 		self.0.take().unwrap()
+	}
+
+	pub fn gain(&self) -> f32 {
+		unsafe {
+			let mut value = 0.0;
+			alGetListenerf(AL_GAIN, &mut value);
+
+			value as f32
+		}
+	}
+
+	pub fn set_gain(&mut self, value: f32) {
+		unsafe {
+			alListenerf(AL_GAIN, value as ALfloat);
+		}
+	}
+
+	pub fn position(&self) -> Position {
+		unsafe {
+			let mut value = Position(Vector { x: 0.0, y: 0.0, z: 0.0 });
+			alGetListenerfv(AL_POSITION, mem::transmute(&mut value));
+
+			value
+		}
+	}
+
+	pub fn set_position(&mut self, value: &Position) {
+		unsafe {
+			alListenerfv(AL_POSITION, mem::transmute(value));
+		}
+	}
+
+	pub fn velocity(&self) -> Velocity {
+		unsafe {
+			let mut value = Velocity(Vector { x: 0.0, y: 0.0, z: 0.0 });
+			alGetListenerfv(AL_VELOCITY, mem::transmute(&mut value));
+
+			value
+		}
+	}
+
+	pub fn set_velocity(&mut self, value: &Velocity) {
+		unsafe {
+			alListenerfv(AL_VELOCITY, mem::transmute(value));
+		}
+	}
+
+	pub fn orientation(&self) -> Orientation {
+		unsafe {
+			let mut value = Orientation(Vector { x: 0.0, y: 0.0, z: 0.0 }, Vector { x: 0.0, y: 0.0, z: 0.0 });
+			alGetListenerfv(AL_ORIENTATION, mem::transmute(&mut value));
+
+			value
+		}
+	}
+
+	pub fn set_orientation(&mut self, value: &Orientation) {
+		unsafe {
+			alListenerfv(AL_ORIENTATION, mem::transmute(value));
+		}
 	}
 }
 
