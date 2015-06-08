@@ -6,7 +6,7 @@ use std::ffi::CStr;
 use std::str::from_utf8_unchecked;
 
 use ffi::*;
-use ::{Device, Error};
+use ::{Device, Error, Source};
 use ::{Vector, Position, Velocity, Orientation, Doppler};
 
 pub struct Context<'a> {
@@ -70,10 +70,8 @@ impl<'a> Context<'a> {
 
 	pub fn make_current(mut self) -> Result<Current<'a>, Error> {
 		unsafe {
-			if cfg!(debug_assertions) {
-				if !alcGetCurrentContext().is_null() {
-					panic!("there's already a current context");
-				}
+			if !alcGetCurrentContext().is_null() {
+				return Err(Error::InvalidOperation);
 			}
 
 			if alcMakeContextCurrent(self.as_mut_ptr()) == ALC_TRUE {
@@ -98,6 +96,10 @@ impl<'a> Context<'a> {
 		unsafe {
 			alcGetCurrentContext() == self.as_ptr()
 		}
+	}
+
+	pub fn source(&self) -> Source {
+		Source::new()
 	}
 }
 
