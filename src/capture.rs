@@ -5,6 +5,7 @@ use std::ffi::CString;
 use ffi::*;
 use ::{Error, traits};
 use ::util::format_for;
+use ::device::extension;
 
 pub struct Capture<T: Reflect + 'static> {
 	ptr: *mut ALCdevice,
@@ -113,4 +114,26 @@ unsafe impl<T: Reflect + 'static> traits::Device for Capture<T> {
 	fn as_ptr(&self) -> *const ALCdevice {
 		self.ptr as *const _
 	}
+}
+
+pub fn names() -> Vec<&'static str> {
+	use std::ffi::CStr;
+	use std::str::from_utf8_unchecked;
+	use libc::strlen;
+
+	let mut result = Vec::new();
+
+	unsafe {
+		if extension::is_supported("ALC_ENUMERATION_EXT") {
+			let mut ptr = alcGetString(ptr::null(), ALC_CAPTURE_DEVICE_SPECIFIER);
+
+			while *ptr != 0 {
+				result.push(from_utf8_unchecked(CStr::from_ptr(ptr).to_bytes()));
+
+				ptr = ptr.offset(strlen(ptr) as isize + 1);
+			}
+		}
+	}
+
+	result
 }

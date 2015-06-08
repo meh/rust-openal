@@ -3,8 +3,6 @@ pub mod extension;
 use std::ffi::CString;
 use std::ptr;
 use std::marker::PhantomData;
-use std::ffi::CStr;
-use std::str::from_utf8_unchecked;
 
 use ffi::*;
 use ::{Error, traits};
@@ -82,12 +80,14 @@ unsafe impl<'a> traits::Device for Device<'a> {
 }
 
 pub fn names() -> Vec<&'static str> {
+	use std::ffi::CStr;
+	use std::str::from_utf8_unchecked;
 	use libc::strlen;
 
 	let mut result = Vec::new();
 
 	unsafe {
-		if extension::is_supported(&Device::wrap(ptr::null_mut()), "ALC_ENUMERATION_EXT") {
+		if extension::is_supported("ALC_ENUMERATION_EXT") {
 			let mut ptr = alcGetString(ptr::null(), ALC_DEVICE_SPECIFIER);
 
 			while *ptr != 0 {
