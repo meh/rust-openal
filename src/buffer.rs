@@ -1,9 +1,9 @@
 use std::mem;
 use std::marker::Reflect;
-use std::any::TypeId;
 
 use ffi::*;
 use ::Error;
+use ::util::format_for;
 
 #[derive(PartialEq, Eq)]
 pub struct Buffer {
@@ -100,31 +100,5 @@ impl Drop for Buffer {
 				}
 			}
 		}
-	}
-}
-
-fn format_for<T: Reflect + 'static>(channels: u16) -> Result<ALenum, Error> {
-	if channels != 1 && channels != 2 {
-		return Err(Error::InvalidValue);
-	}
-
-	if TypeId::of::<T>() == TypeId::of::<u8>() {
-		if channels == 1 {
-			Ok(AL_FORMAT_MONO8)
-		}
-		else {
-			Ok(AL_FORMAT_STEREO8)
-		}
-	}
-	else if TypeId::of::<T>() == TypeId::of::<i16>() {
-		if channels == 1 {
-			Ok(AL_FORMAT_MONO16)
-		}
-		else {
-			Ok(AL_FORMAT_STEREO16)
-		}
-	}
-	else {
-		Err(Error::InvalidValue)
 	}
 }

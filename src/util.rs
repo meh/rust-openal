@@ -1,3 +1,9 @@
+use std::marker::Reflect;
+use std::any::TypeId;
+
+use ffi::*;
+use ::Error;
+
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[repr(C, packed)]
 pub struct Vector {
@@ -26,4 +32,30 @@ pub struct Orientation(pub Vector, pub Vector);
 pub struct Doppler {
 	pub factor:   f32,
 	pub velocity: f32,
+}
+
+pub fn format_for<T: Reflect + 'static>(channels: u16) -> Result<ALenum, Error> {
+	if channels != 1 && channels != 2 {
+		return Err(Error::InvalidValue);
+	}
+
+	if TypeId::of::<T>() == TypeId::of::<u8>() {
+		if channels == 1 {
+			Ok(AL_FORMAT_MONO8)
+		}
+		else {
+			Ok(AL_FORMAT_STEREO8)
+		}
+	}
+	else if TypeId::of::<T>() == TypeId::of::<i16>() {
+		if channels == 1 {
+			Ok(AL_FORMAT_MONO16)
+		}
+		else {
+			Ok(AL_FORMAT_STEREO16)
+		}
+	}
+	else {
+		Err(Error::InvalidValue)
+	}
 }
