@@ -1,0 +1,9 @@
+[package]
+name    = "play"
+version = "0.1.0"
+
+authors = ["meh. <meh@schizofreni.co>"]
+
+[dependencies]
+ffmpeg = "*"
+openal = "*"
