@@ -1,19 +1,18 @@
-use std::marker::{Reflect, PhantomData};
+use std::marker::PhantomData;
 use std::ptr;
 use std::ffi::CString;
 
 use ffi::*;
-use ::{Error, traits};
-use ::util::format_for;
+use ::{Error, Sample, traits};
 use ::device::extension;
 
-pub struct Capture<T: Reflect + 'static> {
+pub struct Capture<T: Sample> {
 	ptr: *mut ALCdevice,
 
 	_marker: PhantomData<T>,
 }
 
-impl<T: Reflect + 'static> Capture<T> {
+impl<T: Sample> Capture<T> {
 	pub unsafe fn wrap(ptr: *mut ALCdevice) -> Self {
 		Capture { ptr: ptr, _marker: PhantomData }
 	}
@@ -27,12 +26,12 @@ impl<T: Reflect + 'static> Capture<T> {
 	}
 }
 
-impl<T: Reflect + 'static> Capture<T> {
-	pub fn default<U: Reflect + 'static>(channels: u16, rate: u32, size: usize) -> Result<Capture<U>, Error> {
+impl<T: Sample> Capture<T> {
+	pub fn default<U: Sample>(channels: u16, rate: u32, size: usize) -> Result<Capture<U>, Error> {
 		unsafe {
 			let ptr = alcCaptureOpenDevice(ptr::null(),
 				rate as ALCuint,
-				try!(format_for::<U>(channels)),
+				try!(<U as Sample>::format(channels)),
 				size as ALCsizei);
 
 			if ptr.is_null() {
@@ -44,11 +43,11 @@ impl<T: Reflect + 'static> Capture<T> {
 		}
 	}
 
-	pub fn open<U: Reflect + 'static>(name: &str, channels: u16, rate: u32, size: usize) -> Result<Capture<U>, Error> {
+	pub fn open<U: Sample>(name: &str, channels: u16, rate: u32, size: usize) -> Result<Capture<U>, Error> {
 		unsafe {
 			let ptr = alcCaptureOpenDevice(CString::new(name.as_bytes()).unwrap().as_ptr(),
 				rate as ALCuint,
-				try!(format_for::<U>(channels)),
+				try!(<U as Sample>::format(channels)),
 				size as ALCsizei);
 
 			if ptr.is_null() {
@@ -95,7 +94,15 @@ impl<T: Reflect + 'static> Capture<T> {
 	}
 }
 
-impl<T: Reflect + 'static> Drop for Capture<T> {
+pub fn default<T: Sample>(channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
+	Capture::<T>::default(channels, rate, size)
+}
+
+pub fn open<T: Sample>(name: &str, channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
+	Capture::<T>::open(name, channels, rate, size)
+}
+
+impl<T: Sample> Drop for Capture<T> {
 	fn drop(&mut self) {
 		unsafe {
 			if cfg!(debug_assertions) {
@@ -110,14 +117,10 @@ impl<T: Reflect + 'static> Drop for Capture<T> {
 	}
 }
 
-unsafe impl<T: Reflect + 'static> traits::Device for Capture<T> {
+unsafe impl<T: Sample> traits::Device for Capture<T> {
 	fn as_ptr(&self) -> *const ALCdevice {
 		self.ptr as *const _
 	}
-}
-
-pub fn default<T: Reflect + 'static>(channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
-	Capture::<T>::default(channels, rate, size)
 }
 
 pub fn names() -> Vec<&'static str> {

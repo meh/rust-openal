@@ -1,4 +1,3 @@
-#![feature(core)]
 
 extern crate libc;
 extern crate openal_sys as ffi;
@@ -24,3 +23,6 @@ pub mod buffer;
 pub use buffer::Buffer;
 
 pub mod extension;
+
+pub mod sample;
+pub use sample::Sample;

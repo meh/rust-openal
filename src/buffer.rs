@@ -1,9 +1,7 @@
 use std::mem;
-use std::marker::Reflect;
 
 use ffi::*;
-use ::Error;
-use ::util::format_for;
+use ::{Error, Sample};
 
 #[derive(PartialEq, Eq)]
 pub struct Buffer {
@@ -26,7 +24,7 @@ impl Buffer {
 		}
 	}
 
-	pub fn new<T: Reflect + 'static>(channels: u16, data: &[T], rate: u32) -> Result<Self, Error> {
+	pub fn new<T: Sample>(channels: u16, data: &[T], rate: u32) -> Result<Self, Error> {
 		let mut buffer = Buffer::empty();
 
 		match buffer.fill(channels, data, rate) {
@@ -38,9 +36,9 @@ impl Buffer {
 		}
 	}
 
-	pub fn fill<T: Reflect + 'static>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
+	pub fn fill<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
 		unsafe {
-			alBufferData(self.id, try!(format_for::<T>(channels)), data.as_ptr() as *const _,
+			alBufferData(self.id, try!(<T as Sample>::format(channels)), data.as_ptr() as *const _,
 				(mem::size_of::<T>() * data.len()) as ALsizei, rate as ALint);
 
 			if let Some(error) = Error::last() {
