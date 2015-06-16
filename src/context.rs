@@ -68,7 +68,7 @@ impl<'a> Context<'a> {
 		}
 	}
 
-	pub fn make_current(mut self) -> Result<Current<'a>, Error> {
+	pub fn into_current(mut self) -> Result<Current<'a>, Error> {
 		unsafe {
 			if !alcGetCurrentContext().is_null() {
 				return Err(Error::InvalidOperation);
@@ -142,12 +142,12 @@ impl<'a> Current<'a> {
 		}
 	}
 
-	pub fn version(&self) -> (&'static str, &'static str, &'static str) {
+	pub fn version(&self) -> (&'static str, &'static str) {
 		unsafe {
 			let     string = from_utf8_unchecked(CStr::from_ptr(alGetString(AL_VERSION)).to_bytes());
-			let mut pieces = string.split(' ');
+			let mut pieces = string.splitn(2, ' ');
 
-			(pieces.next().unwrap(), pieces.next().unwrap(), pieces.next().unwrap())
+			(pieces.next().unwrap(), pieces.next().unwrap())
 		}
 	}
 
