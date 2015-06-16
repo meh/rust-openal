@@ -392,7 +392,7 @@ impl Source {
 
 	pub fn push<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
 		let buffer = try!(::Buffer::new(channels, data, rate));
-		let buffer = try!(self.queue(buffer));
+		let buffer = try!(unsafe { Buffer::new(self, buffer) });
 
 		self.buffers.push_back(buffer);
 
