@@ -1,8 +1,9 @@
 use std::mem;
 use std::ops::Deref;
+use std::collections::VecDeque;
 
 use ffi::*;
-use ::{Error, Vector, Position, Direction, Velocity};
+use ::{Error, Vector, Position, Direction, Velocity, Sample};
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum State {
@@ -41,10 +42,20 @@ impl Offset {
 	}
 }
 
-#[derive(PartialEq, Eq)]
 pub struct Source {
-	id: ALuint,
+	id:      ALuint,
+	buffers: VecDeque<Buffer>,
 }
+
+impl PartialEq for Source {
+	fn eq(&self, other: &Source) -> bool {
+		unsafe {
+			self.id() == other.id()
+		}
+	}
+}
+
+impl Eq for Source { }
 
 impl Source {
 	pub unsafe fn id(&self) -> ALuint {
@@ -58,7 +69,7 @@ impl Source {
 			let mut id = 0;
 			alGenSources(1, &mut id);
 
-			Source { id: id }
+			Source { id: id, buffers: VecDeque::new() }
 		}
 	}
 
@@ -379,11 +390,45 @@ impl Source {
 		}
 	}
 
-	pub fn queue(&mut self, buffer: ::Buffer) -> Buffer {
-		Buffer::new(self, buffer)
+	pub fn push<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
+		let buffer = try!(::Buffer::new(channels, data, rate));
+		let buffer = try!(self.queue(buffer));
+
+		self.buffers.push_back(buffer);
+
+		Ok(())
 	}
 
-	pub unsafe fn just_queue(&mut self, buffer: &::Buffer) -> UnsafeBuffer {
+	pub fn pop(&mut self) -> Result<::Buffer, Error> {
+		if let Some(buffer) = self.buffers.pop_back() {
+			buffer.take()
+		}
+		else {
+			Err(Error::InvalidOperation)
+		}
+	}
+
+	pub fn clear(&mut self) {
+		for _ in 0 .. self.processed() {
+			self.buffers.pop_front();
+		}
+	}
+
+	pub fn queue(&mut self, buffer: ::Buffer) -> Result<Buffer, Error> {
+		if self.buffers.len() > 0 {
+			return Err(Error::InvalidOperation);
+		}
+
+		unsafe {
+			Buffer::new(self, buffer)
+		}
+	}
+
+	pub unsafe fn just_queue(&mut self, buffer: &::Buffer) -> Result<UnsafeBuffer, Error> {
+		if self.buffers.len() > 0 {
+			return Err(Error::InvalidOperation);
+		}
+
 		UnsafeBuffer::new(self, buffer)
 	}
 }
@@ -391,6 +436,15 @@ impl Source {
 impl Drop for Source {
 	fn drop(&mut self) {
 		unsafe {
+			match self.state() {
+				State::Playing | State::Paused =>
+					self.stop(),
+
+				_ => ()
+			}
+
+			self.buffers.clear();
+
 			alDeleteSources(1, &self.id);
 
 			if cfg!(debug_assertions) {
@@ -409,11 +463,14 @@ pub struct Buffer {
 }
 
 impl Buffer {
-	pub fn new(source: &Source, buffer: ::Buffer) -> Buffer {
-		unsafe {
-			alSourceQueueBuffers(source.id(), 1, &buffer.id());
+	pub unsafe fn new(source: &Source, buffer: ::Buffer) -> Result<Buffer, Error> {
+		alSourceQueueBuffers(source.id(), 1, &buffer.id());
 
-			Buffer { source: source.id(), buffer: Some(buffer) }
+		if let Some(error) = Error::last() {
+			Err(error)
+		}
+		else {
+			Ok(Buffer { source: source.id(), buffer: Some(buffer) })
 		}
 	}
 
@@ -462,10 +519,15 @@ pub struct UnsafeBuffer {
 }
 
 impl UnsafeBuffer {
-	pub unsafe fn new(source: &Source, buffer: &::Buffer) -> Self {
+	pub unsafe fn new(source: &Source, buffer: &::Buffer) -> Result<Self, Error> {
 		alSourceQueueBuffers(source.id(), 1, &buffer.id());
 
-		UnsafeBuffer { source: source.id(), buffer: buffer.id() }
+		if let Some(error) = Error::last() {
+			Err(error)
+		}
+		else {
+			Ok(UnsafeBuffer { source: source.id(), buffer: buffer.id() })
+		}
 	}
 }
 
