@@ -1,9 +1,16 @@
 use std::mem;
-use std::ops::Deref;
-use std::collections::VecDeque;
 
 use ffi::*;
-use ::{Error, Vector, Position, Direction, Velocity, Sample};
+use ::{Error, Vector, Position, Direction, Velocity};
+
+pub mod buffer;
+pub use self::buffer::Buffer;
+
+pub mod unsafe_buffer;
+pub use self::unsafe_buffer::UnsafeBuffer;
+
+pub mod buffered;
+pub use self::buffered::Buffered;
 
 #[derive(PartialEq, Eq, Copy, Clone, Debug)]
 pub enum State {
@@ -42,20 +49,10 @@ impl Offset {
 	}
 }
 
+#[derive(PartialEq, Eq)]
 pub struct Source {
-	id:      ALuint,
-	buffers: VecDeque<Buffer>,
+	id: ALuint,
 }
-
-impl PartialEq for Source {
-	fn eq(&self, other: &Source) -> bool {
-		unsafe {
-			self.id() == other.id()
-		}
-	}
-}
-
-impl Eq for Source { }
 
 impl Source {
 	pub unsafe fn id(&self) -> ALuint {
@@ -69,8 +66,12 @@ impl Source {
 			let mut id = 0;
 			alGenSources(1, &mut id);
 
-			Source { id: id, buffers: VecDeque::new() }
+			Source { id: id }
 		}
+	}
+
+	pub fn buffered(self) -> Buffered {
+		Buffered::new(self)
 	}
 
 	pub fn mode(&self) -> Mode {
@@ -327,13 +328,13 @@ impl Source {
 			alSourcef(self.id, AL_MAX_GAIN, value as ALfloat);
 		}
 	}
-	
+
 	pub fn offset(&self, offset: Offset) -> Offset {
 		unsafe {
 			let kind = match offset {
 				Offset::Seconds(..) =>
 					AL_SEC_OFFSET,
-				
+
 				Offset::Samples(..) =>
 					AL_SAMPLE_OFFSET,
 
@@ -362,7 +363,7 @@ impl Source {
 			match value {
 				Offset::Seconds(value) =>
 					alSourcef(self.id, AL_SEC_OFFSET, value),
-				
+
 				Offset::Samples(value) =>
 					alSourcef(self.id, AL_SAMPLE_OFFSET, value),
 
@@ -390,45 +391,13 @@ impl Source {
 		}
 	}
 
-	pub fn push<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
-		let buffer = try!(::Buffer::new(channels, data, rate));
-		let buffer = try!(unsafe { Buffer::new(self, buffer) });
-
-		self.buffers.push_back(buffer);
-
-		Ok(())
-	}
-
-	pub fn pop(&mut self) -> Result<::Buffer, Error> {
-		if let Some(buffer) = self.buffers.pop_back() {
-			buffer.take()
-		}
-		else {
-			Err(Error::InvalidOperation)
-		}
-	}
-
-	pub fn clear(&mut self) {
-		for _ in 0 .. self.processed() {
-			self.buffers.pop_front();
-		}
-	}
-
 	pub fn queue(&mut self, buffer: ::Buffer) -> Result<Buffer, Error> {
-		if self.buffers.len() > 0 {
-			return Err(Error::InvalidOperation);
-		}
-
 		unsafe {
 			Buffer::new(self, buffer)
 		}
 	}
 
 	pub unsafe fn just_queue(&mut self, buffer: &::Buffer) -> Result<UnsafeBuffer, Error> {
-		if self.buffers.len() > 0 {
-			return Err(Error::InvalidOperation);
-		}
-
 		UnsafeBuffer::new(self, buffer)
 	}
 }
@@ -443,102 +412,11 @@ impl Drop for Source {
 				_ => ()
 			}
 
-			self.buffers.clear();
-
 			alDeleteSources(1, &self.id);
 
 			if cfg!(debug_assertions) {
 				if let Some(error) = Error::last() {
 					panic!("{}", error)
-				}
-			}
-		}
-	}
-}
-
-#[must_use]
-pub struct Buffer {
-	source: ALuint,
-	buffer: Option<::Buffer>,
-}
-
-impl Buffer {
-	pub unsafe fn new(source: &Source, buffer: ::Buffer) -> Result<Buffer, Error> {
-		alSourceQueueBuffers(source.id(), 1, &buffer.id());
-
-		if let Some(error) = Error::last() {
-			Err(error)
-		}
-		else {
-			Ok(Buffer { source: source.id(), buffer: Some(buffer) })
-		}
-	}
-
-	pub fn take(mut self) -> Result<::Buffer, Error> {
-		unsafe {
-			alSourceUnqueueBuffers(self.source, 1, &self.buffer.as_ref().unwrap().id());
-
-			if let Some(error) = Error::last() {
-				Err(error)
-			}
-			else {
-				Ok(self.buffer.take().unwrap())
-			}
-		}
-	}
-}
-
-impl Drop for Buffer {
-	fn drop(&mut self) {
-		unsafe {
-			if let Some(ref buffer) = self.buffer {
-				alSourceUnqueueBuffers(self.source, 1, &buffer.id());
-
-				if cfg!(debug_assertions) {
-					if let Some(error) = Error::last() {
-						panic!("{}", error);
-					}
-				}
-			}
-		}
-	}
-}
-
-impl Deref for Buffer {
-	type Target = ::Buffer;
-
-	fn deref(&self) -> &<Self as Deref>::Target {
-		self.buffer.as_ref().unwrap()
-	}
-}
-
-#[must_use]
-pub struct UnsafeBuffer {
-	source: ALuint,
-	buffer: ALuint,
-}
-
-impl UnsafeBuffer {
-	pub unsafe fn new(source: &Source, buffer: &::Buffer) -> Result<Self, Error> {
-		alSourceQueueBuffers(source.id(), 1, &buffer.id());
-
-		if let Some(error) = Error::last() {
-			Err(error)
-		}
-		else {
-			Ok(UnsafeBuffer { source: source.id(), buffer: buffer.id() })
-		}
-	}
-}
-
-impl Drop for UnsafeBuffer {
-	fn drop(&mut self) {
-		unsafe {
-			alSourceUnqueueBuffers(self.source, 1, &self.buffer);
-
-			if cfg!(debug_assertions) {
-				if let Some(error) = Error::last() {
-					panic!("{}", error);
 				}
 			}
 		}
