@@ -5,7 +5,6 @@ use std::thread;
 use std::sync::mpsc::{sync_channel, SyncSender, Receiver};
 use std::path::Path;
 use std::env;
-use std::collections::VecDeque;
 
 enum Decoder {
 	Frame(ffmpeg::frame::Audio),
@@ -59,13 +58,14 @@ fn decoder<T: AsRef<Path>>(path: &T) -> Result<Receiver<Decoder>, ffmpeg::Error>
 					sender.send(Decoder::Frame(resampled)).unwrap();
 				},
 
+				// we didn't get a full frame
+				Ok(false) =>
+					(),
+
 				// if there was an error in the decoding
 				Err(error) =>
 					// send it to the receiver
-					sender.send(Decoder::Error(error)).unwrap(),
-
-				// we didn't get a full frame
-				Ok(false) => (),
+					sender.send(Decoder::Error(error)).unwrap()
 			}
 		}
 
@@ -86,16 +86,13 @@ fn main() {
 	let device  = openal::device::default().unwrap();
 
 	// create a context and make it the current context
-	let context = device.context().unwrap().make_current().unwrap();
+	let context = device.context().unwrap().into_current().unwrap();
 
 	// create a source
-	let mut source = context.source();
+	let mut source = context.source().buffered();
 
 	// disable looping because we don't need that
 	source.disable_looping();
-
-	// create a deque for our cached buffers
-	let mut buffers = VecDeque::new();
 
 	// start our receive loop
 	loop {
@@ -103,13 +100,8 @@ fn main() {
 		match receiver.recv() {
 			// if we got a frame
 			Ok(Decoder::Frame(frame)) => {
-				// destroy the buffers that have been processed
-				for _ in 0 .. source.processed() {
-					buffers.pop_front();
-				}
-
 				// queue a buffer with the current frame data
-				buffers.push_back(source.queue(openal::Buffer::new(frame.channels(), frame.plane::<i16>(0), frame.rate()).unwrap()));
+				source.push(frame.channels(), frame.plane::<i16>(0), frame.rate()).unwrap();
 
 				// play the source unless it's already playing
 				if source.state() != openal::source::State::Playing {
