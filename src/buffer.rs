@@ -15,17 +15,22 @@ impl Buffer {
 }
 
 impl Buffer {
-	pub fn empty() -> Self {
+	pub fn empty() -> Result<Self, Error> {
 		unsafe {
 			let mut id = 0;
 			alGenBuffers(1, &mut id);
 
-			Buffer { id: id }
+			if let Some(error) = Error::last() {
+				Err(error)
+			}
+			else {
+				Ok(Buffer { id: id })
+			}
 		}
 	}
 
 	pub fn new<T: Sample>(channels: u16, data: &[T], rate: u32) -> Result<Self, Error> {
-		let mut buffer = Buffer::empty();
+		let mut buffer = try!(Buffer::empty());
 
 		match buffer.fill(channels, data, rate) {
 			Ok(..) =>
