@@ -3,8 +3,8 @@ use std::ptr;
 use std::ffi::CString;
 
 use ffi::*;
-use ::{Error, Sample, traits};
-use ::device::extension;
+use ::{Error, Sample, extension};
+use traits::Device;
 
 pub struct Capture<T: Sample> {
 	ptr: *mut ALCdevice,
@@ -15,14 +15,6 @@ pub struct Capture<T: Sample> {
 impl<T: Sample> Capture<T> {
 	pub unsafe fn wrap(ptr: *mut ALCdevice) -> Self {
 		Capture { ptr: ptr, _marker: PhantomData }
-	}
-
-	pub unsafe fn as_ptr(&self) -> *const ALCdevice {
-		self.ptr as *const _
-	}
-
-	pub unsafe fn as_mut_ptr(&mut self) -> *mut ALCdevice {
-		self.ptr
 	}
 }
 
@@ -94,14 +86,6 @@ impl<T: Sample> Capture<T> {
 	}
 }
 
-pub fn default<T: Sample>(channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
-	Capture::<T>::default(channels, rate, size)
-}
-
-pub fn open<T: Sample>(name: &str, channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
-	Capture::<T>::open(name, channels, rate, size)
-}
-
 impl<T: Sample> Drop for Capture<T> {
 	fn drop(&mut self) {
 		unsafe {
@@ -117,13 +101,21 @@ impl<T: Sample> Drop for Capture<T> {
 	}
 }
 
-unsafe impl<T: Sample> traits::Device for Capture<T> {
+unsafe impl<T: Sample> Device for Capture<T> {
 	fn as_ptr(&self) -> *const ALCdevice {
 		self.ptr as *const _
 	}
 }
 
-pub fn names() -> Vec<&'static str> {
+pub fn default<T: Sample>(channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
+	Capture::<T>::default(channels, rate, size)
+}
+
+pub fn open<T: Sample>(name: &str, channels: u16, rate: u32, size: usize) -> Result<Capture<T>, Error> {
+	Capture::<T>::open(name, channels, rate, size)
+}
+
+pub fn devices() -> Vec<&'static str> {
 	use std::ffi::CStr;
 	use std::str::from_utf8_unchecked;
 	use libc::strlen;
@@ -131,7 +123,7 @@ pub fn names() -> Vec<&'static str> {
 	let mut result = Vec::new();
 
 	unsafe {
-		if extension::is_supported("ALC_ENUMERATION_EXT") {
+		if extension::device::is_supported("ALC_ENUMERATION_EXT") {
 			let mut ptr = alcGetString(ptr::null(), ALC_CAPTURE_DEVICE_SPECIFIER);
 
 			while *ptr != 0 {

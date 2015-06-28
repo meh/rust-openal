@@ -13,3 +13,9 @@ unsafe impl Device for *const ALCdevice {
 		*self
 	}
 }
+
+unsafe impl Device for *mut ALCdevice {
+	fn as_ptr(&self) -> *const ALCdevice {
+		*self
+	}
+}

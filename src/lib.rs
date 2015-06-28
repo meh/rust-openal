@@ -6,15 +6,16 @@ pub mod util;
 pub use util::{Vector, Position, Direction, Velocity, Orientation, Doppler};
 
 pub mod traits;
+pub use traits::Device;
 
 pub mod error;
 pub use error::Error;
 
-pub mod device;
-pub use device::Device;
+pub mod listener;
+pub use listener::Listener;
 
-pub mod context;
-pub use context::Context;
+pub mod capture;
+pub use capture::Capture;
 
 pub mod source;
 pub use source::Source;

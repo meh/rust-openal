@@ -4,12 +4,12 @@ use std::collections::VecDeque;
 use ::{Error, Source, Sample};
 use super::Buffer;
 
-pub struct Buffered {
-	source:  Source,
+pub struct Buffered<'a> {
+	source:  Source<'a>,
 	buffers: VecDeque<Buffer>,
 }
 
-impl Buffered {
+impl<'a> Buffered<'a> {
 	pub fn new(source: Source) -> Buffered {
 		Buffered {
 			source:  source,
@@ -51,21 +51,21 @@ impl Buffered {
 	}
 }
 
-impl Deref for Buffered {
-	type Target = Source;
+impl<'a> Deref for Buffered<'a> {
+	type Target = Source<'a>;
 
 	fn deref(&self) -> &<Self as Deref>::Target {
 		&self.source
 	}
 }
 
-impl DerefMut for Buffered {
+impl<'a> DerefMut for Buffered<'a> {
 	fn deref_mut(&mut self) -> &mut<Self as Deref>::Target {
 		&mut self.source
 	}
 }
 
-impl Drop for Buffered {
+impl<'a> Drop for Buffered<'a> {
 	fn drop(&mut self) {
 		self.buffers.clear();
 	}

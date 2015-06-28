@@ -1,4 +1,5 @@
 use std::mem;
+use std::marker::PhantomData;
 
 use ffi::*;
 use ::{Error, Vector, Position, Direction, Velocity};
@@ -50,27 +51,27 @@ impl Offset {
 }
 
 #[derive(PartialEq, Eq)]
-pub struct Source {
+pub struct Source<'a> {
 	id: ALuint,
+
+	_marker: PhantomData<&'a ()>,
 }
 
-impl Source {
+impl<'a> Source<'a> {
 	pub unsafe fn id(&self) -> ALuint {
 		self.id
 	}
 }
 
-impl Source {
-	pub fn new() -> Self {
-		unsafe {
-			let mut id = 0;
-			alGenSources(1, &mut id);
+impl<'a> Source<'a> {
+	pub unsafe fn new() -> Self {
+		let mut id = 0;
+		alGenSources(1, &mut id);
 
-			Source { id: id }
-		}
+		Source { id: id, _marker: PhantomData }
 	}
 
-	pub fn buffered(self) -> Buffered {
+	pub fn buffered(self) -> Buffered<'a> {
 		Buffered::new(self)
 	}
 
@@ -402,7 +403,7 @@ impl Source {
 	}
 }
 
-impl Drop for Source {
+impl<'a> Drop for Source<'a> {
 	fn drop(&mut self) {
 		unsafe {
 			match self.state() {
