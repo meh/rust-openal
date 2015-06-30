@@ -28,3 +28,42 @@ pub struct Doppler {
 	pub velocity: f32,
 }
 
+macro_rules! al_panic {
+	() => (
+		if cfg!(debug_assertions) {
+			if let Some(error) = ::Error::last() {
+				panic!("{}", error);
+			}
+		}
+	);
+
+	($device:expr) => (
+		if cfg!(debug_assertions) {
+			if let Some(error) = ::Error::last_for($device) {
+				panic!("{}", error);
+			}
+		}
+	);
+}
+
+macro_rules! al_try {
+	($body:expr) => ({
+		let result = { $body };
+
+		if let Some(error) = ::Error::last() {
+			return Err(error);
+		}
+
+		result
+	});
+
+	($device:expr, $body:expr) => ({
+		let result = { $body };
+
+		if let Some(error) = ::Error::last_for($device) {
+			return Err(error);
+		}
+
+		result
+	});
+}

@@ -1,12 +1,14 @@
+#![allow(raw_pointer_derive)]
 
 extern crate libc;
 extern crate openal_sys as ffi;
 
+#[macro_use]
 pub mod util;
 pub use util::{Vector, Position, Direction, Velocity, Orientation, Doppler};
 
 pub mod traits;
-pub use traits::Device;
+pub use traits::{Device, Context};
 
 pub mod error;
 pub use error::Error;

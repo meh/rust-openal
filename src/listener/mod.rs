@@ -1,20 +1,20 @@
 pub mod listener;
 pub use self::listener::Listener;
 
-pub mod current;
-pub use self::current::Current;
+pub mod attributes;
+pub use self::attributes::Attributes;
 
 use std::ptr;
 
 use ffi::*;
 use {Error, extension};
 
-pub fn default<'a>() -> Result<Listener<'a>, Error> {
-	Listener::default()
+pub fn default<'a>(attributes: &Attributes) -> Result<Listener<'a>, Error> {
+	Listener::default(attributes)
 }
 
-pub fn open<'a>(name: &str) -> Result<Listener<'a>, Error> {
-	Listener::open(name)
+pub fn open<'a>(name: &str, attributes: &Attributes) -> Result<Listener<'a>, Error> {
+	Listener::open(name, attributes)
 }
 
 pub fn devices() -> Vec<&'static str> {

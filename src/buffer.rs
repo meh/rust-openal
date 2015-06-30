@@ -1,35 +1,25 @@
 use std::mem;
+use std::marker::PhantomData;
 
 use ffi::*;
 use ::{Error, Sample};
 
 #[derive(PartialEq, Eq)]
-pub struct Buffer {
+pub struct Buffer<'a> {
 	id: ALuint,
+
+	_marker: PhantomData<&'a ()>,
 }
 
-impl Buffer {
-	pub unsafe fn id(&self) -> ALuint {
-		self.id
-	}
-}
+impl<'a> Buffer<'a> {
+	pub unsafe fn empty() -> Result<Self, Error> {
+		let mut id = 0;
+		al_try!(alGenBuffers(1, &mut id));
 
-impl Buffer {
-	pub fn empty() -> Result<Self, Error> {
-		unsafe {
-			let mut id = 0;
-			alGenBuffers(1, &mut id);
-
-			if let Some(error) = Error::last() {
-				Err(error)
-			}
-			else {
-				Ok(Buffer { id: id })
-			}
-		}
+		Ok(Buffer { id: id, _marker: PhantomData })
 	}
 
-	pub fn new<T: Sample>(channels: u16, data: &[T], rate: u32) -> Result<Self, Error> {
+	pub unsafe fn new<T: Sample>(channels: u16, data: &[T], rate: u32) -> Result<Self, Error> {
 		let mut buffer = try!(Buffer::empty());
 
 		match buffer.fill(channels, data, rate) {
@@ -41,20 +31,19 @@ impl Buffer {
 		}
 	}
 
-	pub fn fill<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
-		unsafe {
-			alBufferData(self.id, try!(<T as Sample>::format(channels)), data.as_ptr() as *const _,
-				(mem::size_of::<T>() * data.len()) as ALsizei, rate as ALint);
+	pub unsafe fn fill<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
+		al_try!(alBufferData(self.id, try!(<T as Sample>::format(channels)), data.as_ptr() as *const _,
+			(mem::size_of::<T>() * data.len()) as ALsizei, rate as ALint));
 
-			if let Some(error) = Error::last() {
-				Err(error)
-			}
-			else {
-				Ok(())
-			}
-		}
+		Ok(())
 	}
 
+	pub unsafe fn id(&self) -> ALuint {
+		self.id
+	}
+}
+
+impl<'a> Buffer<'a> {
 	pub fn rate(&self) -> u32 {
 		unsafe {
 			let mut value = 0;
@@ -92,16 +81,11 @@ impl Buffer {
 	}
 }
 
-impl Drop for Buffer {
+impl<'a> Drop for Buffer<'a> {
 	fn drop(&mut self) {
 		unsafe {
 			alDeleteBuffers(1, &self.id);
-
-			if cfg!(debug_assertions) {
-				if let Some(error) = Error::last() {
-					panic!("{}", error)
-				}
-			}
+			al_panic!();
 		}
 	}
 }
