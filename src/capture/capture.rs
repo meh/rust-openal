@@ -63,7 +63,7 @@ impl<T: Sample> Capture<T> {
 		}
 	}
 
-	pub fn samples(&self) -> usize {
+	pub fn len(&self) -> usize {
 		unsafe {
 			let mut value = 0;
 			alcGetIntegerv(self.as_ptr(), ALC_CAPTURE_SAMPLES, 1, &mut value);
@@ -72,12 +72,14 @@ impl<T: Sample> Capture<T> {
 		}
 	}
 
-	pub fn take(&mut self, out: &mut [T]) -> Result<(), Error> {
+	pub fn take(&mut self) -> Result<Vec<T>, Error> {
 		unsafe {
-			al_try!(self,
-				alcCaptureSamples(self.as_mut_ptr(), out.as_mut_ptr() as *mut _, out.len() as ALCsizei));
+			let mut result = Vec::with_capacity(self.len());
 
-			Ok(())
+			al_try!(self,
+				alcCaptureSamples(self.as_mut_ptr(), result.as_mut_ptr() as *mut _, self.len() as ALCsizei));
+
+			Ok(result)
 		}
 	}
 }
