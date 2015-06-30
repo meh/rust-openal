@@ -83,16 +83,10 @@ fn main() {
 	let receiver = decoder(&env::args().nth(1).expect("missing argument")).unwrap();
 
 	// open the default audio device
-	let device  = openal::device::default().unwrap();
+	let listener = openal::listener::default(&Default::default()).unwrap();
 
-	// create a context and make it the current context
-	let context = device.context().unwrap().into_current().unwrap();
-
-	// create a source
-	let mut source = context.source().buffered();
-
-	// disable looping because we don't need that
-	source.disable_looping();
+	// create a streaming source
+	let mut source = listener.source().unwrap().stream();
 
 	// start our receive loop
 	loop {
