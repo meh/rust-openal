@@ -3,7 +3,6 @@ use std::collections::VecDeque;
 
 use ffi::*;
 use ::{Error, Source, Sample, Buffer};
-use super::State;
 
 pub struct Stream<'a> {
 	source:  Source<'a>,
