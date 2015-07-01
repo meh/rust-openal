@@ -1,3 +1,6 @@
+use ffi::*;
+use Error;
+
 #[derive(PartialEq, Copy, Clone, Debug)]
 #[repr(C, packed)]
 pub struct Vector {
@@ -26,6 +29,30 @@ pub struct Orientation(pub Vector, pub Vector);
 pub struct Doppler {
 	pub factor:   f32,
 	pub velocity: f32,
+}
+
+pub trait Sample {
+	fn format(channels: u16) -> Result<ALenum, Error>;
+}
+
+impl Sample for u8 {
+	fn format(channels: u16) -> Result<ALenum, Error> {
+		match channels {
+			1 => Ok(AL_FORMAT_MONO8),
+			2 => Ok(AL_FORMAT_STEREO8),
+			_ => Err(Error::InvalidValue),
+		}
+	}
+}
+
+impl Sample for i16 {
+	fn format(channels: u16) -> Result<ALenum, Error> {
+		match channels {
+			1 => Ok(AL_FORMAT_MONO16),
+			2 => Ok(AL_FORMAT_STEREO16),
+			_ => Err(Error::InvalidValue),
+		}
+	}
 }
 
 macro_rules! al_panic {
