@@ -315,6 +315,14 @@ impl<'a> Source<'a> {
 	}
 }
 
+impl<'a> ::std::fmt::Debug for Source<'a> {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+		try!(f.write_str("openal::Source("));
+		try!(f.write_str(&format!("{}", unsafe { self.id() })));
+		f.write_str(")")
+	}
+}
+
 impl<'a> Drop for Source<'a> {
 	fn drop(&mut self) {
 		if self.state() != State::Playing && self.state() != State::Paused {
