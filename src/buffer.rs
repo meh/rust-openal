@@ -81,6 +81,18 @@ impl<'a> Buffer<'a> {
 	}
 }
 
+impl<'a> ::std::fmt::Debug for Buffer<'a> {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+		try!(f.write_str("openal::Buffer("));
+		try!(f.write_str(&format!("{}; ", unsafe { self.id() })));
+		try!(f.write_str(&format!("rate={} ", self.rate())));
+		try!(f.write_str(&format!("bits={} ", self.bits())));
+		try!(f.write_str(&format!("channels={} ", self.channels())));
+		try!(f.write_str(&format!("len={}", self.len())));
+		f.write_str(")")
+	}
+}
+
 impl<'a> Drop for Buffer<'a> {
 	fn drop(&mut self) {
 		unsafe {
