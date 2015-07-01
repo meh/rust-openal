@@ -4,29 +4,44 @@ use std::fmt;
 use ffi::*;
 use ::traits::Device;
 
+/// OpenAL error type.
 #[derive(Copy, Clone)]
 pub enum Error {
+	/// There is no current error.
 	None,
 
+	/// The device handle or specifier names an inaccessible driver/server.
 	InvalidDevice,
+
+	/// The Context argument does not name a valid context.
 	InvalidContext,
 
+	/// Invalid name parameter.
 	InvalidName,
+
+	/// Illegal call.
 	InvalidOperation,
 
+	/// Invalid parameter.
 	InvalidEnum,
+
+	/// Invalid enum parameter value.
 	InvalidValue,
 
+	/// Unable to allocate memory.
 	OutOfMemory,
 }
 
+#[doc(hidden)]
 #[derive(Copy, Clone)]
 pub struct AL(pub ALenum);
 
+#[doc(hidden)]
 #[derive(Copy, Clone)]
 pub struct ALC(pub ALCenum);
 
 impl Error {
+	/// Check if there was an error on the last operation.
 	pub fn last() -> Option<Self> {
 		unsafe {
 			match Error::from(AL(alGetError())) {
@@ -39,6 +54,7 @@ impl Error {
 		}
 	}
 
+	/// Check if there was an error on the last operation of the given device.
 	pub fn last_for<T: Device>(device: &T) -> Option<Self> {
 		unsafe {
 			match Error::from(ALC(alcGetError(device.as_ptr()))) {

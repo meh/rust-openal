@@ -1,12 +1,24 @@
 use ffi::*;
 
+/// Represents the attributes that can be set when a `Listener` is opened.
 #[derive(PartialEq, Eq, Copy, Clone, Default, Debug)]
 pub struct Attributes {
-	pub frequency:   Option<i32>,
-	pub refresh:     Option<i32>,
+	/// Frequency for mixing output buffer, in units of Hz.
+	pub frequency: Option<i32>,
+
+	/// Refresh intervals, in units of Hz.
+	pub refresh: Option<i32>,
+
+	/// Flag indicating a synchronous `Listener`.
 	pub synchronous: bool,
-	pub mono:        Option<i32>,
-	pub stereo:      Option<i32>,
+
+	/// A hint indicating how many `Source`s should be capable of supporting mono
+	/// data.
+	pub mono: Option<i32>,
+
+	/// A hint indicating how many `Source`s should be capable of supporting
+	/// stereo data.
+	pub stereo: Option<i32>,
 }
 
 impl<'a> From<&'a Attributes> for Vec<ALint> {

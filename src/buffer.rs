@@ -4,6 +4,7 @@ use std::marker::PhantomData;
 use ffi::*;
 use ::{Error, Sample};
 
+/// A buffer holding sample data.
 #[derive(PartialEq, Eq)]
 pub struct Buffer<'a> {
 	id: ALuint,
@@ -12,6 +13,7 @@ pub struct Buffer<'a> {
 }
 
 impl<'a> Buffer<'a> {
+	#[doc(hidden)]
 	pub unsafe fn empty() -> Result<Self, Error> {
 		let mut id = 0;
 		al_try!(alGenBuffers(1, &mut id));
@@ -19,6 +21,7 @@ impl<'a> Buffer<'a> {
 		Ok(Buffer { id: id, _marker: PhantomData })
 	}
 
+	#[doc(hidden)]
 	pub unsafe fn new<T: Sample>(channels: u16, data: &[T], rate: u32) -> Result<Self, Error> {
 		let mut buffer = try!(Buffer::empty());
 
@@ -31,6 +34,7 @@ impl<'a> Buffer<'a> {
 		}
 	}
 
+	#[doc(hidden)]
 	pub unsafe fn fill<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
 		al_try!(alBufferData(self.id, try!(<T as Sample>::format(channels)), data.as_ptr() as *const _,
 			(mem::size_of::<T>() * data.len()) as ALsizei, rate as ALint));
@@ -38,12 +42,14 @@ impl<'a> Buffer<'a> {
 		Ok(())
 	}
 
+	#[doc(hidden)]
 	pub unsafe fn id(&self) -> ALuint {
 		self.id
 	}
 }
 
 impl<'a> Buffer<'a> {
+	/// The sample rate of the data in the buffer.
 	pub fn rate(&self) -> u32 {
 		unsafe {
 			let mut value = 0;
@@ -53,6 +59,7 @@ impl<'a> Buffer<'a> {
 		}
 	}
 
+	/// The bit depth of the data in the buffer.
 	pub fn bits(&self) -> u16 {
 		unsafe {
 			let mut value = 0;
@@ -62,6 +69,7 @@ impl<'a> Buffer<'a> {
 		}
 	}
 
+	/// The number of channels of the data in the buffer.
 	pub fn channels(&self) -> u16 {
 		unsafe {
 			let mut value = 0;
@@ -71,6 +79,7 @@ impl<'a> Buffer<'a> {
 		}
 	}
 
+	/// The number of samples in the buffer.
 	pub fn len(&self) -> usize {
 		unsafe {
 			let mut value = 0;

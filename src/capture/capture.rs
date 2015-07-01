@@ -6,6 +6,7 @@ use ffi::*;
 use ::{Error, Sample};
 use traits::Device;
 
+/// Represents a capture device.
 pub struct Capture<T: Sample> {
 	ptr: *mut ALCdevice,
 
@@ -15,12 +16,14 @@ pub struct Capture<T: Sample> {
 unsafe impl<T: Sample> Send for Capture<T> { }
 
 impl<T: Sample> Capture<T> {
+	#[doc(hidden)]
 	pub unsafe fn wrap(ptr: *mut ALCdevice) -> Self {
 		Capture { ptr: ptr, _marker: PhantomData }
 	}
 }
 
 impl<T: Sample> Capture<T> {
+	#[doc(hidden)]
 	pub fn default<U: Sample>(channels: u16, rate: u32, size: usize) -> Result<Capture<U>, Error> {
 		unsafe {
 			let ptr = alcCaptureOpenDevice(ptr::null(),
@@ -37,6 +40,7 @@ impl<T: Sample> Capture<T> {
 		}
 	}
 
+	#[doc(hidden)]
 	pub fn open<U: Sample>(name: &str, channels: u16, rate: u32, size: usize) -> Result<Capture<U>, Error> {
 		unsafe {
 			let ptr = alcCaptureOpenDevice(CString::new(name.as_bytes()).unwrap().as_ptr(),
@@ -53,18 +57,21 @@ impl<T: Sample> Capture<T> {
 		}
 	}
 
+	/// Starts recording.
 	pub fn start(&mut self) {
 		unsafe {
 			alcCaptureStart(self.as_mut_ptr());
 		}
 	}
 
+	/// Stops recording.
 	pub fn stop(&mut self) {
 		unsafe {
 			alcCaptureStop(self.as_mut_ptr());
 		}
 	}
 
+	/// Gets the number of samples available.
 	pub fn len(&self) -> usize {
 		unsafe {
 			let mut value = 0;
@@ -74,6 +81,7 @@ impl<T: Sample> Capture<T> {
 		}
 	}
 
+	/// Takes available samples out of the device.
 	pub fn take(&mut self) -> Result<Vec<T>, Error> {
 		unsafe {
 			let mut result = Vec::with_capacity(self.len());

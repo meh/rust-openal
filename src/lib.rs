@@ -1,4 +1,9 @@
+/*!
+OpenAL wrapper for Rust.
+*/
+
 #![allow(raw_pointer_derive)]
+#![warn(missing_docs)]
 
 extern crate libc;
 extern crate openal_sys as ffi;

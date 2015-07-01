@@ -4,12 +4,17 @@ use std::collections::VecDeque;
 use ffi::*;
 use ::{Error, Source, Sample, Buffer};
 
+/// Represents a streaming source for the `Listener`.
+///
+/// Stream sources will have buffers getting in and out of them, they're useful
+/// for playing music and other kind of streaming sounds.
 pub struct Stream<'a> {
 	source:  Source<'a>,
 	buffers: VecDeque<Buffer<'a>>,
 }
 
 impl<'a> Stream<'a> {
+	#[doc(hidden)]
 	pub unsafe fn new(mut source: Source) -> Stream {
 		source.disable_looping();
 
@@ -21,6 +26,7 @@ impl<'a> Stream<'a> {
 }
 
 impl<'a> Stream<'a> {
+	/// Pushes the data into the source.
 	pub fn push<T: Sample>(&mut self, channels: u16, data: &[T], rate: u32) -> Result<(), Error> {
 		let buffer = try!(unsafe { Buffer::new(channels, data, rate) });
 		try!(self.clear());
@@ -34,6 +40,7 @@ impl<'a> Stream<'a> {
 		Ok(())
 	}
 
+	/// Removes a buffer from the front of the queue.
 	pub fn pop(&mut self) -> Result<Buffer, Error> {
 		if let Some(buffer) = self.buffers.pop_back() {
 			unsafe {
@@ -55,6 +62,7 @@ impl<'a> Stream<'a> {
 		}
 	}
 
+	/// Removes the processed buffers from the queue.
 	pub fn clear(&mut self) -> Result<(), Error> {
 		let processed = self.processed();
 
@@ -72,10 +80,12 @@ impl<'a> Stream<'a> {
 		Ok(())
 	}
 
+	#[doc(hidden)]
 	pub fn enable_looping(&mut self) -> ! {
 		unreachable!();
 	}
 
+	#[doc(hidden)]
 	pub fn disable_looping(&mut self) -> ! {
 		unreachable!();
 	}

@@ -9,6 +9,14 @@ use {Error, Device, Context, Source, Sample, Buffer};
 use super::Attributes;
 use ::util::{Vector, Position, Velocity, Orientation, Doppler};
 
+/// Represents the listener.
+///
+/// Only one `Listener` may be open at a time.
+///
+/// _In OpenAL parlance a `Listener` contains both an OpenAL device and an
+/// OpenAL context, and that context is made current on creation. This is
+/// because there are some inconsistencies between implementations that make
+/// having multiple devices or contexts impossible._
 pub struct Listener<'a> {
 	device:  *mut ALCdevice,
 	context: *mut ALCcontext,
@@ -19,12 +27,14 @@ pub struct Listener<'a> {
 unsafe impl<'a> Send for Listener<'a> { }
 
 impl<'a> Listener<'a> {
+	#[doc(hidden)]
 	pub unsafe fn wrap(device: *mut ALCdevice, context: *mut ALCcontext) -> Self {
 		Listener { device: device, context: context, _marker: PhantomData }
 	}
 }
 
 impl<'a> Listener<'a> {
+	#[doc(hidden)]
 	pub fn default(attributes: &Attributes) -> Result<Self, Error> {
 		unsafe {
 			if !alcGetCurrentContext().is_null() {
@@ -51,6 +61,7 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	#[doc(hidden)]
 	pub fn open(name: &str, attributes: &Attributes) -> Result<Self, Error> {
 		unsafe {
 			if !alcGetCurrentContext().is_null() {
@@ -77,36 +88,42 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Process the `Listener`. See OpenAL documentation for `alcProcessContext`.
 	pub fn process(&mut self) {
 		unsafe {
 			alcProcessContext(self.context);
 		}
 	}
 
+	/// Suspend the `Listener`. See OpenAL documentation for `alcSuspendContext`.
 	pub fn suspend(&mut self) {
 		unsafe {
 			alcSuspendContext(self.context);
 		}
 	}
 
+	/// Create a new `Source`.
 	pub fn source<'b>(&self) -> Result<Source<'b>, Error> where 'a: 'b {
 		unsafe {
 			Source::new()
 		}
 	}
 
+	/// Create a new `Buffer` and fill it.
 	pub fn buffer<'b, T: Sample>(&self, channels: u16, data: &[T], rate: u32) -> Result<Buffer<'b>, Error> where 'a: 'b {
 		unsafe {
 			Buffer::new(channels, data, rate)
 		}
 	}
 
+	/// Get the vendor name.
 	pub fn vendor(&self) -> &'static str {
 		unsafe {
 			from_utf8_unchecked(CStr::from_ptr(alGetString(AL_VENDOR)).to_bytes())
 		}
 	}
 
+	/// Get the OpenAL specification version and the context specific version.
 	pub fn version(&self) -> (&'static str, &'static str) {
 		unsafe {
 			let     string = from_utf8_unchecked(CStr::from_ptr(alGetString(AL_VERSION)).to_bytes());
@@ -116,12 +133,14 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Get the name of the renderer.
 	pub fn renderer(&self) -> &'static str {
 		unsafe {
 			from_utf8_unchecked(CStr::from_ptr(alGetString(AL_RENDERER)).to_bytes())
 		}
 	}
 
+	/// Get a list of extensions supported.
 	pub fn extensions(&self) -> Vec<&'static str> {
 		unsafe {
 			from_utf8_unchecked(CStr::from_ptr(alGetString(AL_EXTENSIONS)).to_bytes())
@@ -130,6 +149,7 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Get the doppler factor and velocity.
 	pub fn doppler(&self) -> Doppler {
 		unsafe {
 			Doppler {
@@ -139,6 +159,7 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Set the doppler factor and velocity.
 	pub fn set_doppler(&mut self, value: Doppler) {
 		unsafe {
 			alDopplerFactor(value.factor);
@@ -146,18 +167,21 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Get the speed of sound.
 	pub fn speed_of_sound(&self) -> f32 {
 		unsafe {
 			alGetFloat(AL_SPEED_OF_SOUND)
 		}
 	}
 
+	/// Set the speed of sound.
 	pub fn set_speed_of_sound(&mut self, value: f32) {
 		unsafe {
 			alSpeedOfSound(value as ALfloat);
 		}
 	}
 
+	/// Get the listener gain.
 	pub fn gain(&self) -> f32 {
 		unsafe {
 			let mut value = 0.0;
@@ -167,12 +191,14 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Set the listener gain.
 	pub fn set_gain(&mut self, value: f32) {
 		unsafe {
 			alListenerf(AL_GAIN, value as ALfloat);
 		}
 	}
 
+	/// Get the listener position.
 	pub fn position(&self) -> Position {
 		unsafe {
 			let mut value = Position(Vector { x: 0.0, y: 0.0, z: 0.0 });
@@ -182,12 +208,14 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Set the listener position.
 	pub fn set_position(&mut self, value: &Position) {
 		unsafe {
 			alListenerfv(AL_POSITION, mem::transmute(value));
 		}
 	}
 
+	/// Get the listener velocity.
 	pub fn velocity(&self) -> Velocity {
 		unsafe {
 			let mut value = Velocity(Vector { x: 0.0, y: 0.0, z: 0.0 });
@@ -197,12 +225,14 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Set the listener velocity.
 	pub fn set_velocity(&mut self, value: &Velocity) {
 		unsafe {
 			alListenerfv(AL_VELOCITY, mem::transmute(value));
 		}
 	}
 
+	/// Get the listener orientation.
 	pub fn orientation(&self) -> Orientation {
 		unsafe {
 			let mut value = Orientation(Vector { x: 0.0, y: 0.0, z: 0.0 }, Vector { x: 0.0, y: 0.0, z: 0.0 });
@@ -212,6 +242,7 @@ impl<'a> Listener<'a> {
 		}
 	}
 
+	/// Set the listener orientation.
 	pub fn set_orientation(&mut self, value: &Orientation) {
 		unsafe {
 			alListenerfv(AL_ORIENTATION, mem::transmute(value));
