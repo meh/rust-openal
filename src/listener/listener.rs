@@ -231,6 +231,26 @@ unsafe impl<'a> Context for Listener<'a> {
 	}
 }
 
+impl<'a> ::std::fmt::Debug for Listener<'a> {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+		try!(f.write_str("openal::Listener("));
+
+		try!(f.write_str(&format!("vendor={:?} ", self.vendor())));
+		try!(f.write_str(&format!("version={:?} ", self.version())));
+		try!(f.write_str(&format!("renderer={:?} ", self.renderer())));
+		try!(f.write_str(&format!("extensions={:?}; ", self.extensions())));
+
+		try!(f.write_str(&format!("doppler={:?} ", self.doppler())));
+		try!(f.write_str(&format!("speed_of_sound={} ", self.speed_of_sound())));
+		try!(f.write_str(&format!("gain={} ", self.gain())));
+		try!(f.write_str(&format!("position={:?} ", self.position())));
+		try!(f.write_str(&format!("velocity={:?} ", self.velocity())));
+		try!(f.write_str(&format!("orientation={:?}", self.orientation())));
+
+		f.write_str(")")
+	}
+}
+
 impl<'a> Drop for Listener<'a> {
 	fn drop(&mut self) {
 		unsafe {
