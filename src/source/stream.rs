@@ -94,3 +94,12 @@ impl<'a> DerefMut for Stream<'a> {
 		&mut self.source
 	}
 }
+
+impl<'a> ::std::fmt::Debug for Stream<'a> {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+		try!(f.write_str("openal::source::Stream("));
+		try!(f.write_str(&format!("{}; ", unsafe { self.id() })));
+		try!(f.write_str(&format!("len={}", self.buffers.len())));
+		f.write_str(")")
+	}
+}
