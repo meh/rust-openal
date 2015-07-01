@@ -4,13 +4,13 @@ extern crate libc;
 extern crate openal_sys as ffi;
 
 #[macro_use]
-pub mod util;
-pub use util::{Vector, Position, Direction, Velocity, Orientation, Doppler};
+mod util;
+pub use util::{Vector, Position, Direction, Velocity, Orientation, Doppler, Sample};
 
-pub mod traits;
+mod traits;
 pub use traits::{Device, Context};
 
-pub mod error;
+mod error;
 pub use error::Error;
 
 pub mod listener;
@@ -22,10 +22,7 @@ pub use capture::Capture;
 pub mod source;
 pub use source::Source;
 
-pub mod buffer;
+mod buffer;
 pub use buffer::Buffer;
 
 pub mod extension;
-
-pub mod sample;
-pub use sample::Sample;
