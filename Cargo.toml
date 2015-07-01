@@ -1,6 +1,6 @@
 [package]
 name    = "openal"
-version = "0.1.1"
+version = "0.2.0"
 
 authors = ["meh. <meh@schizofreni.co>"]
 license = "WTFPL"
@@ -15,5 +15,5 @@ libc = "*"
 [dependencies.openal-sys]
 version = "1.16.0"
 
-[dev-dependencies.ffmpeg]
-git = "git://github.com/meh/rust-ffmpeg"
+[dev-dependencies]
+ffmpeg = "*"
