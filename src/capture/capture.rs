@@ -12,6 +12,8 @@ pub struct Capture<T: Sample> {
 	_marker: PhantomData<T>,
 }
 
+unsafe impl<T: Sample> Send for Capture<T> { }
+
 impl<T: Sample> Capture<T> {
 	pub unsafe fn wrap(ptr: *mut ALCdevice) -> Self {
 		Capture { ptr: ptr, _marker: PhantomData }
@@ -84,17 +86,25 @@ impl<T: Sample> Capture<T> {
 	}
 }
 
+unsafe impl<T: Sample> Device for Capture<T> {
+	fn as_ptr(&self) -> *const ALCdevice {
+		self.ptr as *const _
+	}
+}
+
+impl<T: Sample> ::std::fmt::Debug for Capture<T> {
+	fn fmt(&self, f: &mut ::std::fmt::Formatter) -> Result<(), ::std::fmt::Error> {
+		try!(f.write_str("openal::Capture("));
+		try!(f.write_str(&format!("len={}; ", self.len())));
+		f.write_str(")")
+	}
+}
+
 impl<T: Sample> Drop for Capture<T> {
 	fn drop(&mut self) {
 		unsafe {
 			alcCaptureCloseDevice(self.as_mut_ptr());
 			al_panic!(self);
 		}
-	}
-}
-
-unsafe impl<T: Sample> Device for Capture<T> {
-	fn as_ptr(&self) -> *const ALCdevice {
-		self.ptr as *const _
 	}
 }
