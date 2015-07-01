@@ -11,9 +11,10 @@ keywords    = ["audio"]
 
 [dependencies]
 libc = "*"
-
-[dependencies.openal-sys]
-version = "1.16.0"
+openal-sys = "*"
 
 [dev-dependencies]
 ffmpeg = "*"
+
+[features]
+static = ["openal-sys/static"]
