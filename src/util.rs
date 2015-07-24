@@ -3,7 +3,7 @@ use Error;
 
 /// A 3D vector.
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[repr(C, packed)]
+#[repr(C)]
 pub struct Vector {
 	/// The x.
 	pub x: f32,
@@ -17,17 +17,17 @@ pub struct Vector {
 
 /// A 3D vector representing position.
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[repr(C, packed)]
+#[repr(C)]
 pub struct Position(pub Vector);
 
 /// A 3D vector representing direction.
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[repr(C, packed)]
+#[repr(C)]
 pub struct Direction(pub Vector);
 
 /// A 3D vector representing velocity.
 #[derive(PartialEq, Copy, Clone, Debug)]
-#[repr(C, packed)]
+#[repr(C)]
 pub struct Velocity(pub Vector);
 
 /// Two 3D vectors representing orientation.
