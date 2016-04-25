@@ -12,17 +12,17 @@ enum Decoder {
 	End(SyncSender<Decoder>),
 }
 
-fn decoder<T: AsRef<Path>>(path: &T) -> Result<Receiver<Decoder>, ffmpeg::Error> {
+fn decoder<T: AsRef<Path>>(path: T) -> Result<Receiver<Decoder>, ffmpeg::Error> {
 	// create a synchronous channel, we don't want to read more than we can play
 	let (sender, receiver) = sync_channel(8);
 
 	// open the file with ffmpeg
-	let mut format = try!(ffmpeg::format::open(path));
+	let mut format = try!(ffmpeg::format::input(&path));
 
 	// get the audio stream and the decoder for it
 	let (mut codec, stream) = {
 		let stream = format.streams().find(|s| s.codec().medium() == ffmpeg::media::Type::Audio).expect("no audio stream in the file");
-		let codec  = stream.codec().decoder().and_then(|c| c.audio()).unwrap();
+		let codec  = stream.codec().decoder().audio().expect("no audio stream");
 
 		(codec, stream.index())
 	};
