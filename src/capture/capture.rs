@@ -82,12 +82,15 @@ impl<T: Sample> Capture<T> {
 	}
 
 	/// Takes available samples out of the device.
-	pub fn take(&mut self) -> Result<Vec<T>, Error> {
-		unsafe {
-			let mut result = Vec::with_capacity(self.len());
+        pub fn take(&mut self) -> Result<Vec<T>, Error> {
+	        unsafe {
+                        let length = self.len();
+			let mut result = Vec::<T>::with_capacity(length);
 
 			al_try!(self,
-				alcCaptureSamples(self.as_mut_ptr(), result.as_mut_ptr() as *mut _, self.len() as ALCsizei));
+				alcCaptureSamples(self.as_mut_ptr(), result.as_mut_ptr() as *mut _, length as ALCsizei));
+
+                        result.set_len(length);
 
 			Ok(result)
 		}
